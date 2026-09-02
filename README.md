@@ -1,11 +1,11 @@
-# Resume ↔ JD Matcher
+# Resume ↔ Job Description Matcher
 
 A Flutter app that compares a resume against a job description and returns an honest match score, matched skills, missing skills/gaps, and specific improvement feedback — powered by the OpenAI API.
 
 Built this to solve a real problem in my own job search: quickly checking how well my resume aligns with a specific posting, and where the actual gaps are, before applying.
 
-![Input screen](screenshot_input.png)
-![Results screen](screenshot_results.png)
+![Input screen](assets/images/screenshot_input.png)
+![Results screen](assets/images/screenshot_results.png)
 
 ## Features
 
