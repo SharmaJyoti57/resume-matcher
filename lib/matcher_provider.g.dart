@@ -40,7 +40,7 @@ final class MatcherProvider extends $NotifierProvider<Matcher, MatcherState> {
   }
 }
 
-String _$matcherHash() => r'e81a8bb75ab0024fe2da7f6fe24d83a33542c469';
+String _$matcherHash() => r'5c50ae46365327339e89047dbb75a4a10fbed71e';
 
 abstract class _$Matcher extends $Notifier<MatcherState> {
   MatcherState build();

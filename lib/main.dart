@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import 'history_page.dart';
+import 'local_store.dart';
 import 'matcher_provider.dart';
+import 'profile_sheet.dart';
+import 'result_card.dart';
 import 'theme.dart';
-import 'score_gauge.dart';
 
 
 final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
@@ -41,8 +46,37 @@ class _MatcherHomePageState extends ConsumerState<MatcherHomePage> {
   final _resumeController = TextEditingController();
   final _jdController = TextEditingController();
 
+  Timer? _saveTimer;
+  String _lastSavedResume = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore the saved resume, unless the user already started typing.
+    LocalStore.loadResume().then((saved) {
+      if (!mounted || saved.isEmpty || _resumeController.text.isNotEmpty) return;
+      _lastSavedResume = saved;
+      _resumeController.text = saved;
+    });
+    _resumeController.addListener(_scheduleResumeSave);
+  }
+
+  void _scheduleResumeSave() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 600), _saveResumeNow);
+  }
+
+  void _saveResumeNow() {
+    final text = _resumeController.text;
+    if (text == _lastSavedResume) return;
+    _lastSavedResume = text;
+    LocalStore.saveResume(text);
+  }
+
   @override
   void dispose() {
+    if (_saveTimer?.isActive ?? false) _saveResumeNow(); // flush a pending save
+    _saveTimer?.cancel();
     _resumeController.dispose();
     _jdController.dispose();
     super.dispose();
@@ -55,8 +89,8 @@ class _MatcherHomePageState extends ConsumerState<MatcherHomePage> {
         );
   }
 
+  // "Analyze another" keeps your saved resume and clears only the job description.
   void _handleReset() {
-    _resumeController.clear();
     _jdController.clear();
     ref.read(matcherProvider.notifier).reset();
   }
@@ -143,6 +177,18 @@ class _Header extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+        IconButton(
+          tooltip: 'Profile',
+          onPressed: () => showProfileSheet(context),
+          icon: const Icon(Icons.person_outline),
+        ),
+        IconButton(
+          tooltip: 'History',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const HistoryPage()),
+          ),
+          icon: const Icon(Icons.history),
         ),
         IconButton(
           tooltip: 'Toggle theme',
@@ -406,8 +452,10 @@ class _ResultArea extends StatelessWidget {
     if (matcherState.isLoading) {
       return const _SkeletonCard(key: ValueKey('loading'));
     }
-    if (matcherState.result != null) {
-      return _ResultCard(key: ValueKey('result-${matcherState.result!.matchScore}'), result: matcherState.result!);
+    final result = matcherState.result;
+    if (result != null) {
+      // Keyed by identity so two different results with the same score still animate.
+      return ResultCard(key: ValueKey(identityHashCode(result)), result: result);
     }
     return const _EmptyState(key: ValueKey('empty'));
   }
@@ -529,91 +577,6 @@ class _SkeletonCardState extends State<_SkeletonCard> with SingleTickerProviderS
       width: width,
       height: height,
       decoration: BoxDecoration(color: scheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(8)),
-    );
-  }
-}
-
-class _ResultCard extends StatelessWidget {
-  final MatchResult result;
-  const _ResultCard({super.key, required this.result});
-
-  Widget _chip(BuildContext context, String text, {required Color bg, required Color fg}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-      child: Text(text, style: TextStyle(fontSize: 13, color: fg, fontWeight: FontWeight.w500)),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 6)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(child: ScoreGauge(score: result.matchScore)),
-          const SizedBox(height: 28),
-
-          Row(
-            children: [
-              const Icon(Icons.check_circle, size: 18, color: Color(0xFF16A34A)),
-              const SizedBox(width: 6),
-              Text('Matched Skills', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: scheme.onSurface)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8, runSpacing: 8,
-            children: result.matchedSkills
-                .map((s) => _chip(context, s, bg: const Color(0xFFE7F6EC), fg: const Color(0xFF15803D)))
-                .toList(),
-          ),
-          const SizedBox(height: 24),
-
-          Row(
-            children: [
-              const Icon(Icons.error_outline, size: 18, color: Color(0xFFDC2626)),
-              const SizedBox(width: 6),
-              Text('Missing / Gaps', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: scheme.onSurface)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8, runSpacing: 8,
-            children: result.missingSkills
-                .map((s) => _chip(context, s, bg: const Color(0xFFFCEAEA), fg: const Color(0xFFB91C1C)))
-                .toList(),
-          ),
-          const SizedBox(height: 24),
-
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(12),
-              border: Border(left: BorderSide(color: scheme.primary, width: 3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Feedback', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: scheme.onSurface)),
-                const SizedBox(height: 6),
-                Text(result.feedback, style: TextStyle(fontSize: 14, height: 1.4, color: scheme.onSurfaceVariant)),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
