@@ -70,8 +70,7 @@ class _ProfileSheetState extends ConsumerState<_ProfileSheet> {
             Text('Your profile', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: scheme.onSurface)),
             const SizedBox(height: 6),
             Text(
-              'Used only to check eligibility rules in job posts (where the job is open, sponsorship). '
-              'It is never shown to the AI and never changes your score. Saved on this device.',
+              'To check eligibility rules in job posts',
               style: TextStyle(fontSize: 13, height: 1.4, color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 16),

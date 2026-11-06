@@ -17,8 +17,8 @@ class ScoreGauge extends StatelessWidget {
       curve: Curves.easeOutCubic,
       builder: (context, value, _) {
         return SizedBox(
-          width: 112,
-          height: 112,
+          width: 120,
+          height: 120,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -40,7 +40,7 @@ class ScoreGauge extends StatelessWidget {
                   Text(
                     'MATCH SCORE',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 8,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.1,
                       color: scheme.onSurfaceVariant,
