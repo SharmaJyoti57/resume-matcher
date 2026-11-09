@@ -14,8 +14,7 @@ part 'matcher_provider.g.dart';
 
 /// Override at build time: flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
 /// (10.0.2.2 is how the Android emulator reaches your computer's localhost.)
-const String kApiBaseUrl =
-    String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:8000');
+const String kApiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://resume-matcher-backend-oi9f.onrender.com');
 
 // The whole screen's state as one immutable snapshot.
 class MatcherState {
