@@ -3,6 +3,8 @@
 A Flutter app (with a small Python backend) that answers one question: **should I apply to this job?** It compares your resume and profile against a job description and returns a verdict (Apply, Stretch or Skip), any hard blockers, matched, partial and missing requirements with the resume evidence behind each one, and specific feedback on closing the gaps. The analysis is powered by the OpenAI API.
 
 I built this to solve a real problem in my own job search: quickly checking how well my resume fits a specific posting, and where the real gaps and blockers are, before I spend time applying.
+
+
 **Live demo:** https://resumematcherapp.netlify.app
 (The first analysis can take about a minute while the free server wakes up.)
 
